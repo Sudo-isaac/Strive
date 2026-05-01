@@ -12,7 +12,12 @@ export function calculateAge(dob) {
   return age;
 }
 
-// 🎯 Track rules (edit this to match your park)
+// QR generator
+export function generateQR(uid) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${uid}`;
+}
+
+// Track rules (used in admin panel later)
 export const trackRules = {
   beginner: 0,
   intermediate: 10,
@@ -20,13 +25,6 @@ export const trackRules = {
   pro: 16
 };
 
-// 🚦 Check access
 export function canAccessTrack(age, track) {
-  const minAge = trackRules[track];
-  return age >= minAge;
-}
-
-// 📱 Generate QR (UID only)
-export function generateQR(uid) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${uid}`;
+  return age >= trackRules[track];
 }
