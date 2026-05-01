@@ -5,158 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bike Park Pass</title>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBzK9Ke_4sz7eNLhhyNU3wvcq081talXCk",
-  authDomain: "strive-2064d.firebaseapp.com",
-  projectId: "strive-2064d",
-  storageBucket: "strive-2064d.firebasestorage.app",
-  messagingSenderId: "330294337971",
-  appId: "1:330294337971:web:9dd532f012c2ec1c852bc6",
-  measurementId: "G-J9Q0P2Y176"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// SIGN UP
-window.signup = async () => {
-  const email = signupEmail.value;
-  const password = signupPassword.value;
-  const name = signupName.value;
-  const dob = signupDob.value;
-  const age = signupAge.value;
-  const file = signupPhoto.files[0];
-
-  if (!file) return alert("Upload a photo");
-
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    const user = cred.user;
-
-    const storageRef = ref(storage, "users/" + user.uid);
-    await uploadBytes(storageRef, file);
-    const photoURL = await getDownloadURL(storageRef);
-
-    const userData = { name, dob, age, photoURL };
-
-    await setDoc(doc(db, "users", user.uid), userData);
-
-    showDashboard(user.uid);
-
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-// LOGIN
-window.login = async () => {
-  try {
-    const cred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-    showDashboard(cred.user.uid);
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-// DASHBOARD
-async function showDashboard(uid) {
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
-
-  const docSnap = await getDoc(doc(db, "users", uid));
-  const user = docSnap.data();
-
-  document.getElementById("userName").innerText = user.name;
-  document.getElementById("userPhoto").src = user.photoURL;
-
-  // QR (UID only 🔥)
-  const qr = document.getElementById("qr");
-  qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${uid}`;
-}
-
-// AUTO LOGIN
-onAuthStateChanged(auth, (user) => {
-  if (user) showDashboard(user.uid);
-});
-
-// SWITCH FORMS
-window.toggle = () => {
-  signupForm.style.display = signupForm.style.display === "none" ? "block" : "none";
-  loginForm.style.display = loginForm.style.display === "none" ? "block" : "none";
-};
-</script>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-  color: white;
+.card {
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
-}
-
-/* Container */
-.box {
-  background: #2f2f45;
-  padding: 30px;
+  gap: 15px;
+  background: #3a3a55;
+  padding: 15px;
   border-radius: 15px;
-  width: 320px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  margin-top: 15px;
 }
 
-/* Inputs */
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 6px 0;
-  border-radius: 8px;
-  border: none;
+.card:hover {
+  transform: scale(1.02);
+  transition: 0.2s;
 }
 
-/* Buttons */
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  background: #00c896;
-  border: none;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #00a87c;
-}
-
-.switch {
-  text-align: center;
-  margin-top: 10px;
-  cursor: pointer;
-  color: #aaa;
-}
-
-/* Dashboard */
-#dashboard {
-  display: none;
-  text-align: center;
-}
-
-#dashboard img {
+.qr {
   width: 120px;
   border-radius: 10px;
-  margin: 10px 0;
+  background: white;
+  padding: 5px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile {
+  width: 70px;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -172,7 +55,6 @@ button:hover {
     <input id="signupPassword" type="password" placeholder="Password">
     <input id="signupName" placeholder="Full Name">
     <input id="signupDob" type="date">
-    <input id="signupAge" type="number" placeholder="Age">
     <input id="signupPhoto" type="file">
     <button onclick="signup()">Sign Up</button>
   </div>
@@ -192,11 +74,18 @@ button:hover {
 </div>
 
 <!-- DASHBOARD -->
-<div class="box" id="dashboard">
-  <h2 id="userName"></h2>
-  <img id="userPhoto">
-  <h3>Your Park Pass 🎫</h3>
-  <img id="qr">
+<div class="box" id="dashboard" style="display:none;">
+  <h2>Your Bike Park Pass 🎫</h2>
+
+  <div class="card">
+    <img id="qr" class="qr">
+
+    <div class="info">
+      <h3 id="userName"></h3>
+      <p id="userDob"></p>
+      <img id="userPhoto" class="profile">
+    </div>
+  </div>
 </div>
 
 </body>
