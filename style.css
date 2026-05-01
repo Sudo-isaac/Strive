@@ -1,0 +1,134 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* BODY */
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+  color: white;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* MAIN BOX */
+.box {
+  background: #2f2f45;
+  padding: 25px;
+  border-radius: 16px;
+  width: 340px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+
+/* HEADINGS */
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* INPUTS */
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #1f1f30;
+  color: white;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #00c896;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #00a87c;
+  transform: translateY(-1px);
+}
+
+/* SWITCH TEXT */
+.switch {
+  text-align: center;
+  margin-top: 12px;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.switch:hover {
+  color: white;
+}
+
+/* DASHBOARD CARD */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(135deg, #3a3a55, #44446a);
+  padding: 15px;
+  border-radius: 15px;
+  margin-top: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+}
+
+/* QR */
+.qr {
+  width: 110px;
+  border-radius: 10px;
+  background: white;
+  padding: 6px;
+}
+
+/* INFO */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info h3 {
+  font-size: 18px;
+}
+
+.info p {
+  font-size: 14px;
+  color: #ccc;
+}
+
+/* PROFILE IMAGE */
+.profile {
+  width: 65px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #00c896;
+}
+
+/* OPTIONAL BUTTON UNDER CARD */
+#dashboard button {
+  margin-top: 15px;
+}
