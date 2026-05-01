@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bike Park Login</title>
+<title>Bike Park Pass</title>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 // Firebase config
@@ -22,61 +22,76 @@ const firebaseConfig = {
   measurementId: "G-J9Q0P2Y176"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Sign up function
+// SIGN UP
 window.signup = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const name = document.getElementById("name").value;
-  const dob = document.getElementById("dob").value;
-  const age = document.getElementById("age").value;
-  const file = document.getElementById("photo").files[0];
+  const email = signupEmail.value;
+  const password = signupPassword.value;
+  const name = signupName.value;
+  const dob = signupDob.value;
+  const age = signupAge.value;
+  const file = signupPhoto.files[0];
 
   if (!file) return alert("Upload a photo");
 
   try {
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCred.user;
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
 
-    // Upload image
     const storageRef = ref(storage, "users/" + user.uid);
     await uploadBytes(storageRef, file);
     const photoURL = await getDownloadURL(storageRef);
 
-    // Save user data
-    const userData = {
-      name,
-      dob,
-      age,
-      photoURL,
-      uid: user.uid
-    };
+    const userData = { name, dob, age, photoURL };
 
     await setDoc(doc(db, "users", user.uid), userData);
 
-    generateQR(userData);
+    showDashboard(user.uid);
 
-  } catch (err) {
-    alert(err.message);
+  } catch (e) {
+    alert(e.message);
   }
 };
 
-// QR generator
-window.generateQR = (data) => {
-  const qrDiv = document.getElementById("qr");
-  qrDiv.innerHTML = "";
+// LOGIN
+window.login = async () => {
+  try {
+    const cred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+    showDashboard(cred.user.uid);
+  } catch (e) {
+    alert(e.message);
+  }
+};
 
-  const json = JSON.stringify(data);
+// DASHBOARD
+async function showDashboard(uid) {
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
 
-  const img = document.createElement("img");
-  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(json)}`;
-  
-  qrDiv.appendChild(img);
+  const docSnap = await getDoc(doc(db, "users", uid));
+  const user = docSnap.data();
+
+  document.getElementById("userName").innerText = user.name;
+  document.getElementById("userPhoto").src = user.photoURL;
+
+  // QR (UID only 🔥)
+  const qr = document.getElementById("qr");
+  qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${uid}`;
+}
+
+// AUTO LOGIN
+onAuthStateChanged(auth, (user) => {
+  if (user) showDashboard(user.uid);
+});
+
+// SWITCH FORMS
+window.toggle = () => {
+  signupForm.style.display = signupForm.style.display === "none" ? "block" : "none";
+  loginForm.style.display = loginForm.style.display === "none" ? "block" : "none";
 };
 </script>
 
@@ -91,7 +106,8 @@ body {
   height: 100vh;
 }
 
-.container {
+/* Container */
+.box {
   background: #2f2f45;
   padding: 30px;
   border-radius: 15px;
@@ -99,14 +115,16 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
+/* Inputs */
 input {
   width: 100%;
   padding: 10px;
-  margin: 8px 0;
+  margin: 6px 0;
   border-radius: 8px;
   border: none;
 }
 
+/* Buttons */
 button {
   width: 100%;
   padding: 12px;
@@ -122,28 +140,63 @@ button:hover {
   background: #00a87c;
 }
 
-#qr {
-  margin-top: 20px;
+.switch {
   text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+/* Dashboard */
+#dashboard {
+  display: none;
+  text-align: center;
+}
+
+#dashboard img {
+  width: 120px;
+  border-radius: 10px;
+  margin: 10px 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>Bike Park Signup 🚴</h2>
+<div class="box" id="authBox">
 
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <input id="name" type="text" placeholder="Full Name">
-  <input id="dob" type="date">
-  <input id="age" type="number" placeholder="Age">
-  <input id="photo" type="file">
+  <!-- SIGNUP -->
+  <div id="signupForm">
+    <h2>Create Account 🚴</h2>
+    <input id="signupEmail" placeholder="Email">
+    <input id="signupPassword" type="password" placeholder="Password">
+    <input id="signupName" placeholder="Full Name">
+    <input id="signupDob" type="date">
+    <input id="signupAge" type="number" placeholder="Age">
+    <input id="signupPhoto" type="file">
+    <button onclick="signup()">Sign Up</button>
+  </div>
 
-  <button onclick="signup()">Create Account</button>
+  <!-- LOGIN -->
+  <div id="loginForm" style="display:none;">
+    <h2>Login 🔐</h2>
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
 
-  <div id="qr"></div>
+  <div class="switch" onclick="toggle()">
+    Switch Login / Signup
+  </div>
+
+</div>
+
+<!-- DASHBOARD -->
+<div class="box" id="dashboard">
+  <h2 id="userName"></h2>
+  <img id="userPhoto">
+  <h3>Your Park Pass 🎫</h3>
+  <img id="qr">
 </div>
 
 </body>
