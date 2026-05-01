@@ -4,12 +4,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebas
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_MSG_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBzK9Ke_4sz7eNLhhyNU3wvcq081talXCk",
+  authDomain: "strive-2064d.firebaseapp.com",
+  projectId: "strive-2064d",
+  storageBucket: "strive-2064d.firebasestorage.app",
+  messagingSenderId: "330294337971",
+  appId: "1:330294337971:web:9dd532f012c2ec1c852bc6",
+  measurementId: "G-J9Q0P2Y176"
 };
 
 const app = initializeApp(firebaseConfig);
