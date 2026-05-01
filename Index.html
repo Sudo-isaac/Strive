@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bike Park Login</title>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBzK9Ke_4sz7eNLhhyNU3wvcq081talXCk",
+  authDomain: "strive-2064d.firebaseapp.com",
+  projectId: "strive-2064d",
+  storageBucket: "strive-2064d.firebasestorage.app",
+  messagingSenderId: "330294337971",
+  appId: "1:330294337971:web:9dd532f012c2ec1c852bc6",
+  measurementId: "G-J9Q0P2Y176"
+};
+
+// Init Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Sign up function
+window.signup = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const name = document.getElementById("name").value;
+  const dob = document.getElementById("dob").value;
+  const age = document.getElementById("age").value;
+  const file = document.getElementById("photo").files[0];
+
+  if (!file) return alert("Upload a photo");
+
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCred.user;
+
+    // Upload image
+    const storageRef = ref(storage, "users/" + user.uid);
+    await uploadBytes(storageRef, file);
+    const photoURL = await getDownloadURL(storageRef);
+
+    // Save user data
+    const userData = {
+      name,
+      dob,
+      age,
+      photoURL,
+      uid: user.uid
+    };
+
+    await setDoc(doc(db, "users", user.uid), userData);
+
+    generateQR(userData);
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// QR generator
+window.generateQR = (data) => {
+  const qrDiv = document.getElementById("qr");
+  qrDiv.innerHTML = "";
+
+  const json = JSON.stringify(data);
+
+  const img = document.createElement("img");
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(json)}`;
+  
+  qrDiv.appendChild(img);
+};
+</script>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #2f2f45;
+  padding: 30px;
+  border-radius: 15px;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #00c896;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00a87c;
+}
+
+#qr {
+  margin-top: 20px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Bike Park Signup 🚴</h2>
+
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <input id="name" type="text" placeholder="Full Name">
+  <input id="dob" type="date">
+  <input id="age" type="number" placeholder="Age">
+  <input id="photo" type="file">
+
+  <button onclick="signup()">Create Account</button>
+
+  <div id="qr"></div>
+</div>
+
+</body>
+</html>
