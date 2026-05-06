@@ -1,92 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bike Park Pass</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bike Park Pass</title>
 
-<link rel="stylesheet" href="style.css">
-<script type="module" src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
 
-<style>
-.card {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: #3a3a55;
-  padding: 15px;
-  border-radius: 15px;
-  margin-top: 15px;
-}
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1e1e2f;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-.card:hover {
-  transform: scale(1.02);
-  transition: 0.2s;
-}
+    .box {
+      background: #2c2c3e;
+      padding: 25px;
+      border-radius: 15px;
+      width: 300px;
+      text-align: center;
+    }
 
-.qr {
-  width: 120px;
-  border-radius: 10px;
-  background: white;
-  padding: 5px;
-}
+    input {
+      width: 100%;
+      margin: 6px 0;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+    }
 
-.info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #6c7ae0;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-.profile {
-  width: 70px;
-  border-radius: 10px;
-}
-</style>
+    button:hover {
+      background: #5966c9;
+    }
+
+    .switch {
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: #3a3a55;
+      padding: 15px;
+      border-radius: 15px;
+      margin-top: 15px;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+      transition: 0.2s;
+    }
+
+    .qr {
+      width: 120px;
+      border-radius: 10px;
+      background: white;
+      padding: 5px;
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .profile {
+      width: 70px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="box" id="authBox">
+  <!-- AUTH BOX -->
+  <div class="box" id="authBox">
 
-  <!-- SIGNUP -->
-  <div id="signupForm">
-    <h2>Create Account 🚴</h2>
-    <input id="signupEmail" placeholder="Email">
-    <input id="signupPassword" type="password" placeholder="Password">
-    <input id="signupName" placeholder="Full Name">
-    <input id="signupDob" type="date">
-    <input id="signupPhoto" type="file">
-    <button onclick="signup()">Sign Up</button>
+    <!-- SIGNUP -->
+    <div id="signupForm">
+      <h2>Create Account 🚴</h2>
+      <input id="signupEmail" type="email" placeholder="Email">
+      <input id="signupPassword" type="password" placeholder="Password">
+      <input id="signupName" placeholder="Full Name">
+      <input id="signupDob" type="date">
+      <input id="signupPhoto" type="file">
+      <button id="signupBtn">Sign Up</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm" style="display:none;">
+      <h2>Login 🔐</h2>
+      <input id="loginEmail" type="email" placeholder="Email">
+      <input id="loginPassword" type="password" placeholder="Password">
+      <button id="loginBtn">Login</button>
+    </div>
+
+    <div class="switch" id="toggleBtn">
+      Switch Login / Signup
+    </div>
+
   </div>
 
-  <!-- LOGIN -->
-  <div id="loginForm" style="display:none;">
-    <h2>Login 🔐</h2>
-    <input id="loginEmail" placeholder="Email">
-    <input id="loginPassword" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-  </div>
+  <!-- DASHBOARD -->
+  <div class="box" id="dashboard" style="display:none;">
+    <h2>Your Bike Park Pass 🎫</h2>
 
-  <div class="switch" onclick="toggle()">
-    Switch Login / Signup
-  </div>
+    <div class="card">
+      <img id="qr" class="qr" alt="QR Code">
 
-</div>
-
-<!-- DASHBOARD -->
-<div class="box" id="dashboard" style="display:none;">
-  <h2>Your Bike Park Pass 🎫</h2>
-
-  <div class="card">
-    <img id="qr" class="qr">
-
-    <div class="info">
-      <h3 id="userName"></h3>
-      <p id="userDob"></p>
-      <img id="userPhoto" class="profile">
+      <div class="info">
+        <h3 id="userName"></h3>
+        <p id="userDob"></p>
+        <img id="userPhoto" class="profile" alt="Profile Photo">
+      </div>
     </div>
   </div>
-</div>
 
 </body>
 </html>
