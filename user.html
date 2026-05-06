@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bike Park Pass</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #1e1e2f;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: #3a3a55;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+img {
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2 id="name"></h2>
+  <p id="age"></p>
+  <img id="photo" width="120">
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { calculateAge } from "./utils.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const params = new URLSearchParams(window.location.search);
+const uid = params.get("uid");
+
+if (!uid) {
+  document.body.innerHTML = "<h2>Invalid QR Code</h2>";
+} else {
+  const snap = await getDoc(doc(db, "users", uid));
+  const user = snap.data();
+
+  document.getElementById("name").innerText = user.name;
+  document.getElementById("age").innerText =
+    "Age: " + calculateAge(user.dob);
+  document.getElementById("photo").src = user.photoURL;
+}
+</script>
+
+</body>
+</html>
