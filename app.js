@@ -7,20 +7,12 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-import {
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 // SIGNUP
-window.signup = async () => {
+async function signup() {
   const email = document.getElementById("signupEmail").value;
   const password = document.getElementById("signupPassword").value;
   const name = document.getElementById("signupName").value;
@@ -48,10 +40,10 @@ window.signup = async () => {
   } catch (e) {
     alert(e.message);
   }
-};
+}
 
 // LOGIN
-window.login = async () => {
+async function login() {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
@@ -61,7 +53,7 @@ window.login = async () => {
   } catch (e) {
     alert(e.message);
   }
-};
+}
 
 // DASHBOARD
 async function showDashboard(uid) {
@@ -79,7 +71,7 @@ async function showDashboard(uid) {
 
   document.getElementById("userPhoto").src = user.photoURL;
 
-  // QR 🔥
+  // 🔥 QR now links to user page
   document.getElementById("qr").src = generateQR(uid);
 }
 
@@ -89,7 +81,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // TOGGLE
-window.toggle = () => {
+function toggle() {
   const signupForm = document.getElementById("signupForm");
   const loginForm = document.getElementById("loginForm");
 
@@ -98,4 +90,9 @@ window.toggle = () => {
 
   loginForm.style.display =
     loginForm.style.display === "none" ? "block" : "none";
-};
+}
+
+// EVENTS (clean way)
+document.getElementById("signupBtn").addEventListener("click", signup);
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("toggleBtn").addEventListener("click", toggle);
