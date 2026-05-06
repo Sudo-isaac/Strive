@@ -21,11 +21,11 @@ import {
 
 // SIGNUP
 window.signup = async () => {
-  const email = signupEmail.value;
-  const password = signupPassword.value;
-  const name = signupName.value;
-  const dob = signupDob.value;
-  const file = signupPhoto.files[0];
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+  const name = document.getElementById("signupName").value;
+  const dob = document.getElementById("signupDob").value;
+  const file = document.getElementById("signupPhoto").files[0];
 
   if (!file) return alert("Upload a photo");
 
@@ -52,8 +52,11 @@ window.signup = async () => {
 
 // LOGIN
 window.login = async () => {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
   try {
-    const cred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
     showDashboard(cred.user.uid);
   } catch (e) {
     alert(e.message);
@@ -69,10 +72,14 @@ async function showDashboard(uid) {
   const user = snap.data();
 
   document.getElementById("userName").innerText = user.name;
-  document.getElementById("userDob").innerText = "DOB: " + user.dob;
+
+  const age = calculateAge(user.dob);
+  document.getElementById("userDob").innerText =
+    `DOB: ${user.dob} (Age: ${age})`;
+
   document.getElementById("userPhoto").src = user.photoURL;
 
-  // QR (UID only 🔥)
+  // QR 🔥
   document.getElementById("qr").src = generateQR(uid);
 }
 
@@ -83,6 +90,12 @@ onAuthStateChanged(auth, (user) => {
 
 // TOGGLE
 window.toggle = () => {
-  signupForm.style.display = signupForm.style.display === "none" ? "block" : "none";
-  loginForm.style.display = loginForm.style.display === "none" ? "block" : "none";
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+
+  signupForm.style.display =
+    signupForm.style.display === "none" ? "block" : "none";
+
+  loginForm.style.display =
+    loginForm.style.display === "none" ? "block" : "none";
 };
