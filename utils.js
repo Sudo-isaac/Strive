@@ -12,12 +12,13 @@ export function calculateAge(dob) {
   return age;
 }
 
-// QR generator
+// 🔥 IMPORTANT: change URL to your actual site later
 export function generateQR(uid) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${uid}`;
+  const url = `${window.location.origin}/user.html?uid=${uid}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
 }
 
-// Track rules (used in admin panel later)
+// Track rules (for later admin use)
 export const trackRules = {
   beginner: 0,
   intermediate: 10,
