@@ -7,11 +7,20 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
-// SIGNUP
+
+// 🔐 SIGNUP
 async function signup() {
   const email = document.getElementById("signupEmail").value;
   const password = document.getElementById("signupPassword").value;
@@ -42,7 +51,8 @@ async function signup() {
   }
 }
 
-// LOGIN
+
+// 🔑 LOGIN
 async function login() {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
@@ -55,7 +65,8 @@ async function login() {
   }
 }
 
-// DASHBOARD
+
+// 📊 DASHBOARD
 async function showDashboard(uid) {
   document.getElementById("authBox").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
@@ -71,28 +82,30 @@ async function showDashboard(uid) {
 
   document.getElementById("userPhoto").src = user.photoURL;
 
-  // 🔥 QR now links to user page
-  document.getElementById("qr").src = generateQR(uid);
+  // 🔥 FIXED QR GENERATION
+  await generateQR(uid);
 }
 
-// AUTO LOGIN
+
+// 🔄 AUTO LOGIN
 onAuthStateChanged(auth, (user) => {
   if (user) showDashboard(user.uid);
 });
 
-// TOGGLE
+
+// 🔁 TOGGLE LOGIN / SIGNUP
 function toggle() {
   const signupForm = document.getElementById("signupForm");
   const loginForm = document.getElementById("loginForm");
 
-  signupForm.style.display =
-    signupForm.style.display === "none" ? "block" : "none";
+  const signupVisible = signupForm.style.display !== "none";
 
-  loginForm.style.display =
-    loginForm.style.display === "none" ? "block" : "none";
+  signupForm.style.display = signupVisible ? "none" : "block";
+  loginForm.style.display = signupVisible ? "block" : "none";
 }
 
-// EVENTS (clean way)
+
+// 🎯 EVENTS
 document.getElementById("signupBtn").addEventListener("click", signup);
 document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("toggleBtn").addEventListener("click", toggle);
