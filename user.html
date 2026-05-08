@@ -1,60 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
 <title>Bike Park Pass</title>
 
 <style>
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: sans-serif;
+  margin: 0;
+  font-family: Arial, sans-serif;
   background: #1e1e2f;
   color: white;
+
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+
+  min-height: 100vh;
 }
 
 .card {
   background: #3a3a55;
-  padding: 20px;
-  border-radius: 15px;
+  padding: 25px;
+  border-radius: 18px;
   text-align: center;
+  width: 320px;
+
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+p {
+  margin-bottom: 20px;
+  color: #d0d0d0;
 }
 
 img {
-  border-radius: 10px;
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid white;
 }
+
+.error {
+  text-align: center;
+  color: white;
+  font-size: 24px;
+}
+
+.loading {
+  text-align: center;
+  color: white;
+  font-size: 20px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2 id="name"></h2>
-  <p id="age"></p>
-  <img id="photo" width="120">
+<div class="loading" id="loading">
+  Loading Pass...
+</div>
+
+<div class="card" id="card" style="display:none;">
+
+  <h2 id="name">Loading...</h2>
+
+  <p id="age">Age: --</p>
+
+  <img id="photo" src="" alt="User Photo"/>
+
 </div>
 
 <script type="module">
+
 import { db } from "./firebase.js";
 import { calculateAge } from "./utils.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const params = new URLSearchParams(window.location.search);
 const uid = params.get("uid");
 
-if (!uid) {
-  document.body.innerHTML = "<h2>Invalid QR Code</h2>";
-} else {
-  const snap = await getDoc(doc(db, "users", uid));
-  const user = snap.data();
+const loading = document.getElementById("loading");
+const card = document.getElementById("card");
 
-  document.getElementById("name").innerText = user.name;
-  document.getElementById("age").innerText =
-    "Age: " + calculateAge(user.dob);
-  document.getElementById("photo").src = user.photoURL;
+async function loadUser() {
+
+  if (!uid) {
+
+    document.body.innerHTML = `
+      <div class="error">
+        Invalid QR Code
+      </div>
+    `;
+
+    return;
+  }
+
+  try {
+
+    const userRef = doc(db, "users", uid);
+
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+
+      document.body.innerHTML = `
+        <div class="error">
+          User Not Found
+        </div>
+      `;
+
+      return;
+    }
+
+    const user = snap.data();
+
+    document.getElementById("name").innerText =
+      user.name || "Unknown User";
+
+    try {
+
+      document.getElementById("age").innerText =
+        "Age: " + calculateAge(user.dob);
+
+    } catch {
+
+      document.getElementById("age").innerText =
+        "Age: Unknown";
+
+    }
+
+    document.getElementById("photo").src =
+      user.photoURL || "https://placehold.co/140x140";
+
+    loading.style.display = "none";
+    card.style.display = "block";
+
+  } catch (error) {
+
+    console.error("Error loading user:", error);
+
+    document.body.innerHTML = `
+      <div class="error">
+        Error Loading Pass
+      </div>
+    `;
+
+  }
+
 }
+
+loadUser();
+
 </script>
 
 </body>
