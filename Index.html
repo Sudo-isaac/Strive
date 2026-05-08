@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bike Park Pass</title>
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- IMPORTANT -->
   <script type="module" src="app.js"></script>
 
   <style>
@@ -16,23 +18,26 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      margin: 0;
     }
 
     .box {
       background: #2c2c3e;
       padding: 25px;
       border-radius: 15px;
-      width: 300px;
+      width: 320px;
       text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
 
     input {
       width: 100%;
       margin: 6px 0;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
       border: none;
+      box-sizing: border-box;
     }
 
     button {
@@ -68,16 +73,13 @@
       margin-top: 15px;
     }
 
-    .card:hover {
-      transform: scale(1.02);
-      transition: 0.2s;
-    }
-
     .qr {
       width: 120px;
+      height: 120px;
       border-radius: 10px;
       background: white;
       padding: 5px;
+      object-fit: contain;
     }
 
     .info {
@@ -85,36 +87,47 @@
       flex-direction: column;
       gap: 8px;
       text-align: left;
+      flex: 1;
     }
 
     .profile {
       width: 70px;
+      height: 70px;
+      object-fit: cover;
       border-radius: 10px;
+    }
+
+    h2 {
+      margin-top: 0;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- AUTH BOX -->
+  <!-- AUTH -->
   <div class="box" id="authBox">
 
     <!-- SIGNUP -->
     <div id="signupForm">
       <h2>Create Account 🚴</h2>
+
       <input id="signupEmail" type="email" placeholder="Email">
       <input id="signupPassword" type="password" placeholder="Password">
-      <input id="signupName" placeholder="Full Name">
+      <input id="signupName" type="text" placeholder="Full Name">
       <input id="signupDob" type="date">
-      <input id="signupPhoto" type="file">
+      <input id="signupPhoto" type="file" accept="image/*">
+
       <button id="signupBtn">Sign Up</button>
     </div>
 
     <!-- LOGIN -->
     <div id="loginForm" style="display:none;">
       <h2>Login 🔐</h2>
+
       <input id="loginEmail" type="email" placeholder="Email">
       <input id="loginPassword" type="password" placeholder="Password">
+
       <button id="loginBtn">Login</button>
     </div>
 
@@ -129,13 +142,28 @@
     <h2>Your Bike Park Pass 🎫</h2>
 
     <div class="card">
-      <img id="qr" class="qr" alt="QR Code">
 
+      <!-- QR -->
+      <img
+        id="qr"
+        class="qr"
+        src=""
+        alt="QR Code"
+      >
+
+      <!-- INFO -->
       <div class="info">
-        <h3 id="userName"></h3>
+        <h3 id="userName">Loading...</h3>
         <p id="userDob"></p>
-        <img id="userPhoto" class="profile" alt="Profile Photo">
+
+        <img
+          id="userPhoto"
+          class="profile"
+          src=""
+          alt="Profile Photo"
+        >
       </div>
+
     </div>
   </div>
 
