@@ -1,31 +1,37 @@
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js";
+
+
+// 🎂 AGE CALCULATION
 export function calculateAge(dob) {
   const birth = new Date(dob);
-  const today = new Date();
+  const diff = Date.now() - birth.getTime();
+  return new Date(diff).getUTCFullYear() - 1970;
+}
 
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
 
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
+// 📲 QR GENERATOR (CANVAS — FIXED)
+export async function generateQR(uid) {
+  const canvas = document.getElementById("qr");
+
+  const data = JSON.stringify({
+    uid: uid,
+    type: "bike-pass",
+    issued: Date.now()
+  });
+
+  try {
+    await QRCode.toCanvas(canvas, data, {
+      width: 140,
+      margin: 1,
+      color: {
+        dark: "#ffffff",
+        light: "#3a3a55"
+      }
+    });
+
+    console.log("QR generated successfully 🚀");
+
+  } catch (err) {
+    console.error("QR generation failed:", err);
   }
-
-  return age;
-}
-
-// 🔥 IMPORTANT: change URL to your actual site later
-export function generateQR(uid) {
-  const url = `${window.location.origin}/user.html?uid=${uid}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-}
-
-// Track rules (for later admin use)
-export const trackRules = {
-  beginner: 0,
-  intermediate: 10,
-  advanced: 14,
-  pro: 16
-};
-
-export function canAccessTrack(age, track) {
-  return age >= trackRules[track];
 }
