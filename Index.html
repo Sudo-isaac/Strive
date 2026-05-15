@@ -4,13 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bike Park Pass</title>
-
-  <link rel="stylesheet" href="style.css">
-
-  <!-- IMPORTANT -->
   <script type="module" src="app.js"></script>
-
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: sans-serif;
       background: #1e1e2f;
@@ -19,7 +16,6 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
     }
 
     .box {
@@ -31,38 +27,47 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
 
+    h2 { margin-bottom: 15px; }
+
     input {
       width: 100%;
       margin: 6px 0;
       padding: 10px;
       border-radius: 8px;
       border: none;
-      box-sizing: border-box;
+      background: #3a3a55;
+      color: white;
+      font-size: 14px;
     }
+
+    input::placeholder { color: #aaa; }
 
     button {
       width: 100%;
-      margin-top: 10px;
-      padding: 10px;
+      margin-top: 12px;
+      padding: 11px;
       border: none;
       border-radius: 10px;
       background: #6c7ae0;
       color: white;
       cursor: pointer;
       font-weight: bold;
+      font-size: 15px;
+      transition: background 0.2s;
     }
 
-    button:hover {
-      background: #5966c9;
-    }
+    button:hover { background: #5966c9; }
 
     .switch {
-      margin-top: 10px;
+      margin-top: 14px;
       cursor: pointer;
-      font-size: 14px;
-      opacity: 0.8;
+      font-size: 13px;
+      opacity: 0.7;
     }
 
+    .switch:hover { opacity: 1; }
+
+    /* ── DASHBOARD ── */
     .card {
       display: flex;
       align-items: center;
@@ -73,13 +78,15 @@
       margin-top: 15px;
     }
 
-    .qr {
+    #qr {
       width: 120px;
       height: 120px;
+      min-width: 120px;
       border-radius: 10px;
       background: white;
       padding: 5px;
       object-fit: contain;
+      display: block;
     }
 
     .info {
@@ -88,82 +95,65 @@
       gap: 8px;
       text-align: left;
       flex: 1;
+      overflow: hidden;
     }
 
-    .profile {
-      width: 70px;
-      height: 70px;
+    .info h3 {
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .info p {
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    #userPhoto {
+      width: 65px;
+      height: 65px;
       object-fit: cover;
       border-radius: 10px;
-    }
-
-    h2 {
-      margin-top: 0;
+      border: 2px solid #6c7ae0;
     }
   </style>
 </head>
-
 <body>
 
-  <!-- AUTH -->
+  <!-- ── AUTH ── -->
   <div class="box" id="authBox">
 
     <!-- SIGNUP -->
     <div id="signupForm">
       <h2>Create Account 🚴</h2>
-
-      <input id="signupEmail" type="email" placeholder="Email">
+      <input id="signupEmail"    type="email"    placeholder="Email">
       <input id="signupPassword" type="password" placeholder="Password">
-      <input id="signupName" type="text" placeholder="Full Name">
-      <input id="signupDob" type="date">
-      <input id="signupPhoto" type="file" accept="image/*">
-
+      <input id="signupName"     type="text"     placeholder="Full Name">
+      <input id="signupDob"      type="date">
+      <input id="signupPhoto"    type="file"     accept="image/*">
       <button id="signupBtn">Sign Up</button>
     </div>
 
     <!-- LOGIN -->
     <div id="loginForm" style="display:none;">
       <h2>Login 🔐</h2>
-
-      <input id="loginEmail" type="email" placeholder="Email">
+      <input id="loginEmail"    type="email"    placeholder="Email">
       <input id="loginPassword" type="password" placeholder="Password">
-
       <button id="loginBtn">Login</button>
     </div>
 
-    <div class="switch" id="toggleBtn">
-      Switch Login / Signup
-    </div>
-
+    <div class="switch" id="toggleBtn">Switch Login / Signup</div>
   </div>
 
-  <!-- DASHBOARD -->
+  <!-- ── DASHBOARD ── -->
   <div class="box" id="dashboard" style="display:none;">
     <h2>Your Bike Park Pass 🎫</h2>
-
     <div class="card">
-
-      <!-- QR -->
-      <img
-        id="qr"
-        class="qr"
-        src=""
-        alt="QR Code"
-      >
-
-      <!-- INFO -->
+      <img id="qr" src="" alt="QR Code">
       <div class="info">
         <h3 id="userName">Loading...</h3>
-        <p id="userDob"></p>
-
-        <img
-          id="userPhoto"
-          class="profile"
-          src=""
-          alt="Profile Photo"
-        >
+        <p  id="userDob"></p>
+        <img id="userPhoto" src="" alt="Profile Photo">
       </div>
-
     </div>
   </div>
 
