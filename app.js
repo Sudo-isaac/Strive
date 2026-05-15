@@ -1,4 +1,4 @@
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { calculateAge, generateQR } from "./utils.js";
 import {
   createUserWithEmailAndPassword,
@@ -10,11 +10,6 @@ import {
   setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // ─── STATUS HELPER ────────────────────────────────────────
 function setStatus(msg, color = "orange") {
@@ -33,6 +28,33 @@ function setStatus(msg, color = "orange") {
   }
   el.style.background = color;
   el.innerText = msg;
+}
+
+// ─── CONVERT IMAGE TO BASE64 ──────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    // Resize image first to keep Firestore doc small
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 200;
+        let w = img.width;
+        let h = img.height;
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else        { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ─── SIGNUP ───────────────────────────────────────────────
@@ -56,13 +78,11 @@ async function signup() {
     setStatus("Step 1/3: Creating account...");
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid  = cred.user.uid;
-    setStatus("Step 1 ✅ Account created: " + uid);
+    setStatus("Step 1 ✅ Account created");
 
-    setStatus("Step 2/3: Uploading photo...");
-    const storageRef = ref(storage, `users/${uid}/photo`);
-    const snapshot   = await uploadBytes(storageRef, file);
-    const photoURL   = await getDownloadURL(snapshot.ref);
-    setStatus("Step 2 ✅ Photo uploaded");
+    setStatus("Step 2/3: Processing photo...");
+    const photoBase64 = await fileToBase64(file);
+    setStatus("Step 2 ✅ Photo ready");
 
     setStatus("Step 3/3: Saving your data...");
     const userDoc = {
@@ -70,13 +90,13 @@ async function signup() {
       name,
       email,
       dob,
-      photoURL,
+      photoURL:  photoBase64,
       age:       calculateAge(dob),
       createdAt: new Date().toISOString(),
       passType:  "bike-park"
     };
     await setDoc(doc(db, "users", uid), userDoc);
-    setStatus("Step 3 ✅ Data saved! Loading pass...", "lightgreen");
+    setStatus("✅ All saved! Loading pass...", "lightgreen");
 
     showDashboard(uid);
 
@@ -138,7 +158,6 @@ async function showDashboard(uid) {
 
     generateQR(uid);
 
-    // Hide status after 3 seconds on success
     setTimeout(() => {
       const el = document.getElementById("statusMsg");
       if (el) el.style.display = "none";
