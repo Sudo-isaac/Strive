@@ -1,5 +1,5 @@
 import { auth, db, storage } from "./firebase.js";
-import { calculateAge } from "./utils.js";
+import { calculateAge, generateQR } from "./utils.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -16,79 +16,93 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// 🔐 SIGNUP
+// ─── SIGNUP ───────────────────────────────────────────────
 async function signup() {
-  const email = document.getElementById("signupEmail").value;
+  const email    = document.getElementById("signupEmail").value.trim();
   const password = document.getElementById("signupPassword").value;
-  const name = document.getElementById("signupName").value;
-  const dob = document.getElementById("signupDob").value;
-  const file = document.getElementById("signupPhoto").files[0];
+  const name     = document.getElementById("signupName").value.trim();
+  const dob      = document.getElementById("signupDob").value;
+  const file     = document.getElementById("signupPhoto").files[0];
 
-  if (!file) return alert("Upload a photo");
+  if (!email || !password || !name || !dob) return alert("Please fill in all fields.");
+  if (!file) return alert("Please upload a profile photo.");
 
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    const user = cred.user;
+    const uid  = cred.user.uid;
 
-    const storageRef = ref(storage, "users/" + user.uid);
+    const storageRef = ref(storage, "users/" + uid);
     await uploadBytes(storageRef, file);
     const photoURL = await getDownloadURL(storageRef);
 
-    await setDoc(doc(db, "users", user.uid), { name, dob, photoURL });
-    showDashboard(user.uid);
+    await setDoc(doc(db, "users", uid), { name, dob, photoURL });
+    showDashboard(uid);
   } catch (e) {
-    alert(e.message);
+    alert("Signup failed: " + e.message);
   }
 }
 
-// 🔑 LOGIN
+// ─── LOGIN ────────────────────────────────────────────────
 async function login() {
-  const email = document.getElementById("loginEmail").value;
+  const email    = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) return alert("Please enter your email and password.");
+
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     showDashboard(cred.user.uid);
   } catch (e) {
-    alert(e.message);
+    alert("Login failed: " + e.message);
   }
 }
 
-// 📊 DASHBOARD
+// ─── DASHBOARD ────────────────────────────────────────────
 async function showDashboard(uid) {
-  document.getElementById("authBox").style.display = "none";
+  // Show dashboard, hide auth
+  document.getElementById("authBox").style.display   = "none";
   document.getElementById("dashboard").style.display = "block";
 
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) return;
-  const user = snap.data();
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (!snap.exists()) {
+      alert("User data not found.");
+      return;
+    }
 
-  document.getElementById("userName").innerText = user.name;
-  document.getElementById("userDob").innerText =
-    `DOB: ${user.dob} (Age: ${calculateAge(user.dob)})`;
-  document.getElementById("userPhoto").src = user.photoURL;
+    const user = snap.data();
 
-  // ✅ Generate QR and set the img src directly
-  const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
-    window.location.origin + "/pass.html?uid=" + uid
-  )}`;
-  document.getElementById("qr").src = qrURL;
+    document.getElementById("userName").innerText = user.name || "Unknown";
+    document.getElementById("userDob").innerText  =
+      user.dob
+        ? `DOB: ${user.dob} (Age: ${calculateAge(user.dob)})`
+        : "DOB: Unknown";
+    document.getElementById("userPhoto").src = user.photoURL || "";
+
+    // Generate QR code
+    generateQR(uid);
+
+  } catch (e) {
+    console.error("Error loading dashboard:", e);
+    alert("Failed to load your pass. Please try again.");
+  }
 }
 
-// 🔄 AUTO LOGIN
+// ─── AUTO LOGIN ───────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
   if (user) showDashboard(user.uid);
 });
 
-// 🔁 TOGGLE
+// ─── TOGGLE SIGNUP / LOGIN ────────────────────────────────
 function toggle() {
-  const signupForm = document.getElementById("signupForm");
-  const loginForm = document.getElementById("loginForm");
-  const signupVisible = signupForm.style.display !== "none";
-  signupForm.style.display = signupVisible ? "none" : "block";
-  loginForm.style.display = signupVisible ? "block" : "none";
+  const signupForm   = document.getElementById("signupForm");
+  const loginForm    = document.getElementById("loginForm");
+  const showingSignup = signupForm.style.display !== "none";
+  signupForm.style.display = showingSignup ? "none"  : "block";
+  loginForm.style.display  = showingSignup ? "block" : "none";
 }
 
-// 🎯 EVENTS
+// ─── EVENT LISTENERS ──────────────────────────────────────
 document.getElementById("signupBtn").addEventListener("click", signup);
 document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("toggleBtn").addEventListener("click", toggle);
