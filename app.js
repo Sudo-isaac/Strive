@@ -16,6 +16,25 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+// ─── STATUS HELPER ────────────────────────────────────────
+function setStatus(msg, color = "orange") {
+  let el = document.getElementById("statusMsg");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "statusMsg";
+    el.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0;
+      background: ${color}; color: black;
+      padding: 12px; font-size: 14px;
+      font-weight: bold; text-align: center;
+      z-index: 9999; white-space: pre-wrap;
+    `;
+    document.body.prepend(el);
+  }
+  el.style.background = color;
+  el.innerText = msg;
+}
+
 // ─── SIGNUP ───────────────────────────────────────────────
 async function signup() {
   const email    = document.getElementById("signupEmail").value.trim();
@@ -34,21 +53,18 @@ async function signup() {
   }
 
   try {
-    // STEP 1 — Create Firebase Auth account
-    console.log("⏳ Step 1: Creating auth account...");
+    setStatus("Step 1/3: Creating account...");
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid  = cred.user.uid;
-    console.log("✅ Step 1 done — UID:", uid);
+    setStatus("Step 1 ✅ Account created: " + uid);
 
-    // STEP 2 — Upload photo to Firebase Storage
-    console.log("⏳ Step 2: Uploading photo...");
+    setStatus("Step 2/3: Uploading photo...");
     const storageRef = ref(storage, `users/${uid}/photo`);
     const snapshot   = await uploadBytes(storageRef, file);
     const photoURL   = await getDownloadURL(snapshot.ref);
-    console.log("✅ Step 2 done — photoURL:", photoURL);
+    setStatus("Step 2 ✅ Photo uploaded");
 
-    // STEP 3 — Save user data to Firestore
-    console.log("⏳ Step 3: Saving to Firestore...");
+    setStatus("Step 3/3: Saving your data...");
     const userDoc = {
       uid,
       name,
@@ -60,14 +76,12 @@ async function signup() {
       passType:  "bike-park"
     };
     await setDoc(doc(db, "users", uid), userDoc);
-    console.log("✅ Step 3 done — Firestore saved:", userDoc);
+    setStatus("Step 3 ✅ Data saved! Loading pass...", "lightgreen");
 
-    // STEP 4 — Show dashboard
     showDashboard(uid);
 
   } catch (e) {
-    console.error("❌ Signup error:", e.code, e.message);
-    alert("Signup failed:\n" + e.message);
+    setStatus("❌ FAILED: " + e.message, "red");
   }
 }
 
@@ -82,13 +96,12 @@ async function login() {
   }
 
   try {
-    console.log("⏳ Logging in...");
+    setStatus("Logging in...");
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    console.log("✅ Logged in:", cred.user.uid);
+    setStatus("✅ Logged in!", "lightgreen");
     showDashboard(cred.user.uid);
   } catch (e) {
-    console.error("❌ Login error:", e.code, e.message);
-    alert("Login failed:\n" + e.message);
+    setStatus("❌ Login failed: " + e.message, "red");
   }
 }
 
@@ -98,53 +111,47 @@ async function showDashboard(uid) {
   document.getElementById("dashboard").style.display = "block";
 
   try {
-    console.log("⏳ Loading Firestore doc for UID:", uid);
+    setStatus("Loading your pass...");
     const snap = await getDoc(doc(db, "users", uid));
 
     if (!snap.exists()) {
-      console.error("❌ No Firestore doc found for UID:", uid);
-      document.getElementById("userName").innerText = "⚠️ No data found";
+      setStatus("❌ No data in Firestore for UID: " + uid, "red");
+      document.getElementById("userName").innerText = "No data found";
       document.getElementById("userDob").innerText  = "Please sign up again";
-      document.getElementById("userPhoto").style.display = "none";
-      document.getElementById("qr").style.display        = "none";
       return;
     }
 
     const user = snap.data();
-    console.log("✅ User data:", user);
+    setStatus("✅ Pass loaded!", "lightgreen");
 
-    // Populate pass
     document.getElementById("userName").innerText =
       user.name || "Unknown";
-
     document.getElementById("userDob").innerText =
       user.dob
         ? `DOB: ${user.dob}  •  Age: ${calculateAge(user.dob)}`
         : "DOB: Unknown";
 
-    // Profile photo
     if (user.photoURL) {
-      const photoEl = document.getElementById("userPhoto");
-      photoEl.src             = user.photoURL;
-      photoEl.style.display   = "block";
-      console.log("✅ Photo set:", user.photoURL);
+      document.getElementById("userPhoto").src           = user.photoURL;
+      document.getElementById("userPhoto").style.display = "block";
     }
 
-    // QR code
     generateQR(uid);
 
+    // Hide status after 3 seconds on success
+    setTimeout(() => {
+      const el = document.getElementById("statusMsg");
+      if (el) el.style.display = "none";
+    }, 3000);
+
   } catch (e) {
-    console.error("❌ Dashboard error:", e.code, e.message);
-    alert("Failed to load pass:\n" + e.message);
+    setStatus("❌ Dashboard error: " + e.message, "red");
   }
 }
 
 // ─── AUTO LOGIN ───────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("🔄 Already logged in:", user.uid);
-    showDashboard(user.uid);
-  }
+  if (user) showDashboard(user.uid);
 });
 
 // ─── TOGGLE ───────────────────────────────────────────────
