@@ -24,40 +24,50 @@ async function signup() {
   const dob      = document.getElementById("signupDob").value;
   const file     = document.getElementById("signupPhoto").files[0];
 
-  if (!email || !password || !name || !dob) return alert("Please fill in all fields.");
-  if (!file) return alert("Please upload a profile photo.");
+  if (!email || !password || !name || !dob) {
+    alert("Please fill in all fields.");
+    return;
+  }
+  if (!file) {
+    alert("Please upload a profile photo.");
+    return;
+  }
 
   try {
-    // 1. Create auth account
+    // STEP 1 — Create Firebase Auth account
+    console.log("⏳ Step 1: Creating auth account...");
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid  = cred.user.uid;
-    console.log("✅ Auth account created:", uid);
+    console.log("✅ Step 1 done — UID:", uid);
 
-    // 2. Upload photo to Storage
-    const storageRef = ref(storage, "users/" + uid + "/photo");
-    await uploadBytes(storageRef, file);
-    const photoURL = await getDownloadURL(storageRef);
-    console.log("✅ Photo uploaded:", photoURL);
+    // STEP 2 — Upload photo to Firebase Storage
+    console.log("⏳ Step 2: Uploading photo...");
+    const storageRef = ref(storage, `users/${uid}/photo`);
+    const snapshot   = await uploadBytes(storageRef, file);
+    const photoURL   = await getDownloadURL(snapshot.ref);
+    console.log("✅ Step 2 done — photoURL:", photoURL);
 
-    // 3. Save full user document to Firestore
+    // STEP 3 — Save user data to Firestore
+    console.log("⏳ Step 3: Saving to Firestore...");
     const userDoc = {
       uid,
       name,
       email,
       dob,
       photoURL,
-      age: calculateAge(dob),
+      age:       calculateAge(dob),
       createdAt: new Date().toISOString(),
-      passType: "bike-park"
+      passType:  "bike-park"
     };
-
     await setDoc(doc(db, "users", uid), userDoc);
-    console.log("✅ Firestore document saved:", userDoc);
+    console.log("✅ Step 3 done — Firestore saved:", userDoc);
 
+    // STEP 4 — Show dashboard
     showDashboard(uid);
+
   } catch (e) {
-    console.error("Signup error:", e);
-    alert("Signup failed: " + e.message);
+    console.error("❌ Signup error:", e.code, e.message);
+    alert("Signup failed:\n" + e.message);
   }
 }
 
@@ -66,15 +76,19 @@ async function login() {
   const email    = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
 
-  if (!email || !password) return alert("Please enter your email and password.");
+  if (!email || !password) {
+    alert("Please enter your email and password.");
+    return;
+  }
 
   try {
+    console.log("⏳ Logging in...");
     const cred = await signInWithEmailAndPassword(auth, email, password);
     console.log("✅ Logged in:", cred.user.uid);
     showDashboard(cred.user.uid);
   } catch (e) {
-    console.error("Login error:", e);
-    alert("Login failed: " + e.message);
+    console.error("❌ Login error:", e.code, e.message);
+    alert("Login failed:\n" + e.message);
   }
 }
 
@@ -84,43 +98,56 @@ async function showDashboard(uid) {
   document.getElementById("dashboard").style.display = "block";
 
   try {
-    console.log("Loading dashboard for UID:", uid);
+    console.log("⏳ Loading Firestore doc for UID:", uid);
     const snap = await getDoc(doc(db, "users", uid));
 
     if (!snap.exists()) {
-      console.error("❌ No Firestore document for UID:", uid);
-      document.getElementById("userName").innerText = "No data found";
+      console.error("❌ No Firestore doc found for UID:", uid);
+      document.getElementById("userName").innerText = "⚠️ No data found";
       document.getElementById("userDob").innerText  = "Please sign up again";
+      document.getElementById("userPhoto").style.display = "none";
+      document.getElementById("qr").style.display        = "none";
       return;
     }
 
     const user = snap.data();
-    console.log("✅ User data loaded:", user);
+    console.log("✅ User data:", user);
 
-    document.getElementById("userName").innerText = user.name  || "Unknown";
-    document.getElementById("userDob").innerText  =
+    // Populate pass
+    document.getElementById("userName").innerText =
+      user.name || "Unknown";
+
+    document.getElementById("userDob").innerText =
       user.dob
-        ? `DOB: ${user.dob} (Age: ${calculateAge(user.dob)})`
+        ? `DOB: ${user.dob}  •  Age: ${calculateAge(user.dob)}`
         : "DOB: Unknown";
-    document.getElementById("userPhoto").src = user.photoURL || "";
 
+    // Profile photo
+    if (user.photoURL) {
+      const photoEl = document.getElementById("userPhoto");
+      photoEl.src             = user.photoURL;
+      photoEl.style.display   = "block";
+      console.log("✅ Photo set:", user.photoURL);
+    }
+
+    // QR code
     generateQR(uid);
 
   } catch (e) {
-    console.error("Dashboard error:", e);
-    alert("Failed to load your pass: " + e.message);
+    console.error("❌ Dashboard error:", e.code, e.message);
+    alert("Failed to load pass:\n" + e.message);
   }
 }
 
 // ─── AUTO LOGIN ───────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("🔄 Auto login detected:", user.uid);
+    console.log("🔄 Already logged in:", user.uid);
     showDashboard(user.uid);
   }
 });
 
-// ─── TOGGLE SIGNUP / LOGIN ────────────────────────────────
+// ─── TOGGLE ───────────────────────────────────────────────
 function toggle() {
   const signupForm    = document.getElementById("signupForm");
   const loginForm     = document.getElementById("loginForm");
@@ -129,7 +156,7 @@ function toggle() {
   loginForm.style.display  = showingSignup ? "block" : "none";
 }
 
-// ─── EVENT LISTENERS ──────────────────────────────────────
+// ─── EVENTS ───────────────────────────────────────────────
 document.getElementById("signupBtn").addEventListener("click", signup);
 document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("toggleBtn").addEventListener("click", toggle);
