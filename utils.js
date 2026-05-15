@@ -8,14 +8,26 @@ export function calculateAge(dob) {
   return age;
 }
 
-// 📲 QR GENERATOR (uses free API, no broken imports)
-export async function generateQR(uid) {
-  const passURL = window.location.origin + "/pass.html?uid=" + uid;
+// 📲 QR GENERATOR — uses api.qrserver.com, no broken npm imports
+export function generateQR(uid) {
+  // Use a hardcoded base or relative path — works on file:// and localhost
+  const base = (window.location.origin === "null" || window.location.origin === "file://")
+    ? "http://localhost:5500"  // change this to your server URL if needed
+    : window.location.origin;
+
+  const passURL = base + "/pass.html?uid=" + encodeURIComponent(uid);
+
   const qrURL =
-    "https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=ffffff&bgcolor=3a3a55&data=" +
-    encodeURIComponent(passURL);
+    "https://api.qrserver.com/v1/create-qr-code/?size=120x120" +
+    "&color=ffffff&bgcolor=3a3a55" +
+    "&data=" + encodeURIComponent(passURL);
 
   const img = document.getElementById("qr");
-  img.src = qrURL;
-  console.log("QR generated successfully 🚀");
+  if (img) {
+    img.src = qrURL;
+    img.alt = "QR Code";
+    console.log("✅ QR generated:", qrURL);
+  } else {
+    console.error("❌ #qr element not found in DOM");
+  }
 }
