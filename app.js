@@ -28,16 +28,35 @@ async function signup() {
   if (!file) return alert("Please upload a profile photo.");
 
   try {
+    // 1. Create auth account
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid  = cred.user.uid;
+    console.log("✅ Auth account created:", uid);
 
-    const storageRef = ref(storage, "users/" + uid);
+    // 2. Upload photo to Storage
+    const storageRef = ref(storage, "users/" + uid + "/photo");
     await uploadBytes(storageRef, file);
     const photoURL = await getDownloadURL(storageRef);
+    console.log("✅ Photo uploaded:", photoURL);
 
-    await setDoc(doc(db, "users", uid), { name, dob, photoURL });
+    // 3. Save full user document to Firestore
+    const userDoc = {
+      uid,
+      name,
+      email,
+      dob,
+      photoURL,
+      age: calculateAge(dob),
+      createdAt: new Date().toISOString(),
+      passType: "bike-park"
+    };
+
+    await setDoc(doc(db, "users", uid), userDoc);
+    console.log("✅ Firestore document saved:", userDoc);
+
     showDashboard(uid);
   } catch (e) {
+    console.error("Signup error:", e);
     alert("Signup failed: " + e.message);
   }
 }
@@ -51,52 +70,60 @@ async function login() {
 
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
+    console.log("✅ Logged in:", cred.user.uid);
     showDashboard(cred.user.uid);
   } catch (e) {
+    console.error("Login error:", e);
     alert("Login failed: " + e.message);
   }
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────
 async function showDashboard(uid) {
-  // Show dashboard, hide auth
   document.getElementById("authBox").style.display   = "none";
   document.getElementById("dashboard").style.display = "block";
 
   try {
+    console.log("Loading dashboard for UID:", uid);
     const snap = await getDoc(doc(db, "users", uid));
+
     if (!snap.exists()) {
-      alert("User data not found.");
+      console.error("❌ No Firestore document for UID:", uid);
+      document.getElementById("userName").innerText = "No data found";
+      document.getElementById("userDob").innerText  = "Please sign up again";
       return;
     }
 
     const user = snap.data();
+    console.log("✅ User data loaded:", user);
 
-    document.getElementById("userName").innerText = user.name || "Unknown";
+    document.getElementById("userName").innerText = user.name  || "Unknown";
     document.getElementById("userDob").innerText  =
       user.dob
         ? `DOB: ${user.dob} (Age: ${calculateAge(user.dob)})`
         : "DOB: Unknown";
     document.getElementById("userPhoto").src = user.photoURL || "";
 
-    // Generate QR code
     generateQR(uid);
 
   } catch (e) {
-    console.error("Error loading dashboard:", e);
-    alert("Failed to load your pass. Please try again.");
+    console.error("Dashboard error:", e);
+    alert("Failed to load your pass: " + e.message);
   }
 }
 
 // ─── AUTO LOGIN ───────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
-  if (user) showDashboard(user.uid);
+  if (user) {
+    console.log("🔄 Auto login detected:", user.uid);
+    showDashboard(user.uid);
+  }
 });
 
 // ─── TOGGLE SIGNUP / LOGIN ────────────────────────────────
 function toggle() {
-  const signupForm   = document.getElementById("signupForm");
-  const loginForm    = document.getElementById("loginForm");
+  const signupForm    = document.getElementById("signupForm");
+  const loginForm     = document.getElementById("loginForm");
   const showingSignup = signupForm.style.display !== "none";
   signupForm.style.display = showingSignup ? "none"  : "block";
   loginForm.style.display  = showingSignup ? "block" : "none";
