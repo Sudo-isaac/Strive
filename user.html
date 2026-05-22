@@ -26,11 +26,21 @@ body {
 }
 h2 { margin-bottom: 10px; }
 p { margin-bottom: 20px; color: #d0d0d0; }
-img {
+img.photo {
   width: 140px;
   height: 140px;
   object-fit: cover;
   border-radius: 12px;
+  border: 3px solid white;
+  margin-bottom: 16px;
+}
+#qrcode {
+  margin: 16px auto 0;
+  display: flex;
+  justify-content: center;
+}
+#qrcode canvas {
+  border-radius: 8px;
   border: 3px solid white;
 }
 .error { text-align: center; color: white; font-size: 24px; }
@@ -42,11 +52,14 @@ img {
 <div class="card" id="card" style="display:none;">
   <h2 id="name">Loading...</h2>
   <p id="age">Age: --</p>
-  <img id="photo" src="" alt="User Photo"/>
+  <img class="photo" id="photo" src="" alt="User Photo"/>
+  <div id="qrcode"></div>
 </div>
 
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script type="module">
-  // ✅ All imports from the SAME version
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -65,13 +78,24 @@ img {
 
   function calculateAge(dob) {
     if (!dob) throw new Error("No DOB");
-    // Handle Firestore Timestamp or plain string
     const birth = dob.toDate ? dob.toDate() : new Date(dob);
     const now = new Date();
     let age = now.getFullYear() - birth.getFullYear();
     const m = now.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
     return age;
+  }
+
+  function generateQR(uid) {
+    const qrUrl = `${window.location.origin}${window.location.pathname}?uid=${uid}`;
+    new QRCode(document.getElementById("qrcode"), {
+      text: qrUrl,
+      width: 160,
+      height: 160,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -98,6 +122,10 @@ img {
         document.getElementById("age").innerText = "Age: Unknown";
       }
       document.getElementById("photo").src = user.photoURL || "https://placehold.co/140x140";
+
+      // ✅ Generate QR code pointing back to this pass URL
+      generateQR(uid);
+
       loading.style.display = "none";
       card.style.display = "block";
     } catch (error) {
